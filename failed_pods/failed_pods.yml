@@ -1,0 +1,17 @@
+- name: Find and Report Failed Pods
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Get a list of all pods
+      kubernetes.pod.info:
+        name: "{{ item.metadata.name }}"
+      with_items: "{{ ansible_facts.kubernetes.pods }}"
+      register: pod_info
+
+    - name: Filter failed pods
+      set_fact: failed_pods={{ pod_info.results | selectattr('status.phase', 'eq', 'Failed') }}
+
+    - name: Print information about failed pods
+      debug:
+        msg: "Failed Pod: {{ item.metadata.name }}"
+      with_items: "{{ failed_pods }}"
